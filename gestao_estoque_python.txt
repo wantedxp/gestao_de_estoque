@@ -1,0 +1,75 @@
+# Importando as bibliotecas necessárias
+import pandas as pd
+import numpy as np
+from sklearn.model_selection import train_test_split
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.metrics import mean_absolute_error
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+# Função para carregar dados históricos de vendas
+def carregar_dados(caminho):
+    dados = pd.read_csv(caminho)  # Substitua pelo caminho do arquivo
+    return dados
+
+# Função para limpar e preparar os dados
+def preparar_dados(dados):
+    dados = dados.dropna()  # Remove dados faltantes
+    dados['Data'] = pd.to_datetime(dados['Data'])  # Convertendo a coluna de data
+    dados['Mes'] = dados['Data'].dt.month
+    dados['Ano'] = dados['Data'].dt.year
+    return dados
+
+# Função para visualizar dados
+def visualizar_dados(dados):
+    plt.figure(figsize=(10,6))
+    sns.lineplot(x='Data', y='Quantidade', data=dados)
+    plt.title('Histórico de Vendas')
+    plt.show()
+
+# Função para prever a demanda
+def prever_demanda(dados):
+    X = dados[['Mes', 'Ano']]  # Recursos (features)
+    y = dados['Quantidade']  # Alvo (target)
+    
+    # Dividindo os dados em conjunto de treino e teste
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+    
+    # Modelo de Random Forest para previsões
+    modelo = RandomForestRegressor(n_estimators=100, random_state=42)
+    modelo.fit(X_train, y_train)
+    
+    # Previsões no conjunto de teste
+    previsoes = modelo.predict(X_test)
+    
+    # Avaliação do modelo
+    erro = mean_absolute_error(y_test, previsoes)
+    print(f'Erro absoluto médio: {erro}')
+    
+    return modelo
+
+# Função para prever a demanda futura
+def prever_futuro(modelo, mes, ano):
+    previsao = modelo.predict([[mes, ano]])
+    print(f'Previsão para {mes}/{ano}: {previsao[0]} unidades')
+
+# Função principal
+def main():
+    # Carregar os dados
+    caminho_dados = 'dados_vendas.csv'  # Substitua pelo caminho do arquivo CSV
+    dados = carregar_dados(caminho_dados)
+    
+    # Preparar os dados
+    dados_preparados = preparar_dados(dados)
+    
+    # Visualizar os dados históricos
+    visualizar_dados(dados_preparados)
+    
+    # Prever a demanda
+    modelo = prever_demanda(dados_preparados)
+    
+    # Fazer previsão para um mês/ano específico
+    prever_futuro(modelo, mes=12, ano=2024)  # Exemplo: dezembro de 2024
+
+if __name__ == '__main__':
+    main()
