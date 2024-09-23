@@ -9,7 +9,7 @@ import seaborn as sns
 
 # Função para carregar dados históricos de vendas
 def carregar_dados(caminho):
-    dados = pd.read_csv(caminho)  # Substitua pelo caminho do arquivo
+    dados = pd.read_csv(dados_vendas) 
     return dados
 
 # Função para limpar e preparar os dados
