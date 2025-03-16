@@ -1,75 +1,117 @@
-# Importando as bibliotecas necessárias
-import pandas as pd
-import numpy as np
-from sklearn.model_selection import train_test_split
-from sklearn.ensemble import RandomForestRegressor
-from sklearn.metrics import mean_absolute_error
-import matplotlib.pyplot as plt
-import seaborn as sns
+import React, { useState } from 'react';
+import { View, Text, TextInput, Button, FlatList, StyleSheet } from 'react-native';
 
-# Função para carregar dados históricos de vendas
-def carregar_dados(caminho):
-    dados = pd.read_csv(dados_vendas) 
-    return dados
+const VendaApp = () => {
+  const [produto, setProduto] = useState('');
+  const [preco, setPreco] = useState('');
+  const [quantidade, setQuantidade] = useState('');
+  const [vendas, setVendas] = useState([]);
 
-# Função para limpar e preparar os dados
-def preparar_dados(dados):
-    dados = dados.dropna()  # Remove dados faltantes
-    dados['Data'] = pd.to_datetime(dados['Data'])  # Convertendo a coluna de data
-    dados['Mes'] = dados['Data'].dt.month
-    dados['Ano'] = dados['Data'].dt.year
-    return dados
+  const adicionarVenda = () => {
+    if (!produto || !preco || !quantidade) {
+      alert("Todos os campos são obrigatórios!");
+      return;
+    }
+    const total = parseFloat(preco) * parseInt(quantidade);
+    setVendas([...vendas, { produto, preco, quantidade, total }]);
+    setProduto('');
+    setPreco('');
+    setQuantidade('');
+  };
 
-# Função para visualizar dados
-def visualizar_dados(dados):
-    plt.figure(figsize=(10,6))
-    sns.lineplot(x='Data', y='Quantidade', data=dados)
-    plt.title('Histórico de Vendas')
-    plt.show()
+  const calcularTotalGeral = () => {
+    return vendas.reduce((total, venda) => total + venda.total, 0);
+  };
 
-# Função para prever a demanda
-def prever_demanda(dados):
-    X = dados[['Mes', 'Ano']]  # Recursos (features)
-    y = dados['Quantidade']  # Alvo (target)
-    
-    # Dividindo os dados em conjunto de treino e teste
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-    
-    # Modelo de Random Forest para previsões
-    modelo = RandomForestRegressor(n_estimators=100, random_state=42)
-    modelo.fit(X_train, y_train)
-    
-    # Previsões no conjunto de teste
-    previsoes = modelo.predict(X_test)
-    
-    # Avaliação do modelo
-    erro = mean_absolute_error(y_test, previsoes)
-    print(f'Erro absoluto médio: {erro}')
-    
-    return modelo
+  return (
+    <View style={styles.container}>
+      <Text style={styles.title}>Gestão de Vendas</Text>
 
-# Função para prever a demanda futura
-def prever_futuro(modelo, mes, ano):
-    previsao = modelo.predict([[mes, ano]])
-    print(f'Previsão para {mes}/{ano}: {previsao[0]} unidades')
+      <TextInput
+        style={styles.input}
+        placeholder="Nome do produto"
+        placeholderTextColor="#ccc"
+        value={produto}
+        onChangeText={setProduto}
+      />
+      <TextInput
+        style={styles.input}
+        placeholder="Preço unitário"
+        keyboardType="numeric"
+        placeholderTextColor="#ccc"
+        value={preco}
+        onChangeText={setPreco}
+      />
+      <TextInput
+        style={styles.input}
+        placeholder="Quantidade"
+        keyboardType="numeric"
+        placeholderTextColor="#ccc"
+        value={quantidade}
+        onChangeText={setQuantidade}
+      />
 
-# Função principal
-def main():
-    # Carregar os dados
-    caminho_dados = 'dados_vendas.csv'  # Substitua pelo caminho do arquivo CSV
-    dados = carregar_dados(caminho_dados)
-    
-    # Preparar os dados
-    dados_preparados = preparar_dados(dados)
-    
-    # Visualizar os dados históricos
-    visualizar_dados(dados_preparados)
-    
-    # Prever a demanda
-    modelo = prever_demanda(dados_preparados)
-    
-    # Fazer previsão para um mês/ano específico
-    prever_futuro(modelo, mes=12, ano=2024)  # Exemplo: dezembro de 2024
+      <Button title="Adicionar Venda" onPress={adicionarVenda} color="#4CAF50" />
 
-if __name__ == '__main__':
-    main()
+      <FlatList
+        data={vendas}
+        keyExtractor={(item, index) => index.toString()}
+        renderItem={({ item }) => (
+          <View style={styles.vendaItem}>
+            <Text style={styles.itemText}>{item.produto}</Text>
+            <Text style={styles.itemText}>Preço: R${item.preco}</Text>
+            <Text style={styles.itemText}>Quantidade: {item.quantidade}</Text>
+            <Text style={styles.itemText}>Total: R${item.total.toFixed(2)}</Text>
+          </View>
+        )}
+      />
+
+      <Text style={styles.total}>Total Geral: R${calcularTotalGeral().toFixed(2)}</Text>
+    </View>
+  );
+};
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    padding: 20,
+    justifyContent: 'flex-start',
+    backgroundColor: '#121212',  // Fundo preto
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    marginBottom: 20,
+    color: '#fff',  // Texto branco
+  },
+  input: {
+    height: 40,
+    borderColor: '#555',
+    borderWidth: 1,
+    marginBottom: 10,
+    paddingLeft: 8,
+    borderRadius: 5,
+    color: '#fff',  // Texto dos inputs branco
+  },
+  vendaItem: {
+    padding: 10,
+    marginBottom: 10,
+    backgroundColor: '#333',  // Fundo escuro para os itens
+    borderRadius: 5,
+    borderColor: '#444',
+    borderWidth: 1,
+  },
+  itemText: {
+    color: '#fff',  // Texto dos itens branco
+  },
+  total: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    marginTop: 20,
+    color: '#fff',  // Total branco
+  },
+});
+
+export default VendaApp;
